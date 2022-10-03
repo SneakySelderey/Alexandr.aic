@@ -31,13 +31,14 @@ class Alex(commands.Cog):
                 in_dict = [i[0] for i in words_dict[str(message.author.id)]]
             else:
                 words_dict[str(message.author.id)] = []
-                in_dict = {}
+                in_dict = []
             if words_dict == {"key": ["value1", "value2"]}:
                 words_dict = {str(message.author.id): []}
-                in_dict = {}
+                in_dict = []
             for word in msg_words:
                 if word not in in_dict:
                     words_dict[str(message.author.id)].append([word, 1])
+                    in_dict.append(word)
                 else:
                     words_dict[str(message.author.id)][in_dict.index(word)][1] += 1
             with open("dict.json", "w", encoding='utf8') as f:
@@ -46,8 +47,8 @@ class Alex(commands.Cog):
     @commands.command(name='sudo_Alexandr.aic')
     async def random_words(self, ctx):
         with open("dict.json", "r", encoding='utf8') as f:
-            data = json.load(f)['358539951651946496']
-        msg = list(choices([i[0] for i in data], weights=[i[1] for i in data], k=randint(1, 10)))
+            data = json.load(f)[str(ctx.message.author.id)]
+        msg = list(choices([i[0] for i in data], weights=[i[1] for i in data], k=randint(5, 15)))
         line = ''
         for i in msg:
             line += i + ' '
