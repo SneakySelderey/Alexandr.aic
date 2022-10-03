@@ -20,7 +20,7 @@ class Alex(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        if '$' not in message.content and message.author != self.bot.user:
+        if '$' != message.content[0] and message.author != self.bot.user:
             msg = message.content
             msg_words = msg.split(' ')
             for i in [',', '.']:
