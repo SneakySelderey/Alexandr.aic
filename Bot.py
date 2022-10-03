@@ -19,17 +19,21 @@ class Alex(commands.Cog):
         self.bot.remove_command('help')
 
     @commands.Cog.listener()
-    async def on_message(ctx, message):
-        if message.author.id == 358539951651946496 and '$' not in message.content:
+    async def on_message(self, message):
+        if '$' not in message.content and message.author != self.bot.user:
             msg = message.content
             msg_words = msg.split(' ')
             for i in [',', '.']:
                 msg_words = list(map(lambda x: x.replace(i, ''), msg_words))
             with open("dict.json", "r", encoding='utf8') as f:
                 words_dict = json.load(f)
-                in_dict = [i[0] for i in words_dict['358539951651946496']]
+            if str(message.author.id) in words_dict.keys():
+                in_dict = [i[0] for i in words_dict[str(message.author.id)]]
+            else:
+                words_dict[str(message.author.id)] = []
+                in_dict = {}
             if words_dict == {"key": ["value1", "value2"]}:
-                words_dict = {message.author.id: []}
+                words_dict = {str(message.author.id): []}
                 in_dict = {}
             for word in msg_words:
                 if word not in in_dict:
