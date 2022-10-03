@@ -4,6 +4,7 @@ from discord.ext import commands
 # import logging
 from decouple import config
 from random import choices, randint
+import json
 
 
 intents = discord.Intents.default()
@@ -24,21 +25,28 @@ class Alex(commands.Cog):
             msg_words = msg.split(' ')
             for i in [',', '.']:
                 msg_words = list(map(lambda x: x.replace(i, ''), msg_words))
-            with open('words.txt', 'r', encoding='utf8') as f:
-                data = f.readlines()
-            with open('words.txt', 'a', encoding='utf8') as f:
-                for word in msg_words:
-                    if word not in data:  # TODO: Эта строка работает не так, как надо. Написать нормальный алгоритм фильтрования уже записанных слов.
-                        f.write(f'{word}\n')
+            with open("dict.json", "r", encoding='utf8') as f:
+                words_dict = json.load(f)
+                in_dict = [i[0] for i in words_dict['358539951651946496']]
+            if words_dict == {"key": ["value1", "value2"]}:
+                words_dict = {message.author.id: []}
+                in_dict = {}
+            for word in msg_words:
+                if word not in in_dict:
+                    words_dict[str(message.author.id)].append([word, 1])
+                else:
+                    words_dict[str(message.author.id)][in_dict.index(word)][1] += 1
+            with open("dict.json", "w", encoding='utf8') as f:
+                json.dump(words_dict, f, ensure_ascii=False)
 
     @commands.command(name='sudo_Alexandr.aic')
     async def random_words(self, ctx):
-        with open('words.txt', 'r', encoding='utf8') as f:
-            data = f.readlines()
-        msg = list(choices(data, k=randint(1, 10)))
+        with open("dict.json", "r", encoding='utf8') as f:
+            data = json.load(f)['358539951651946496']
+        msg = list(choices([i[0] for i in data], weights=[i[1] for i in data], k=randint(1, 10)))
         line = ''
         for i in msg:
-            line += i.replace('\n', ' ')
+            line += i + ' '
         await ctx.send(f"""
                         {line}
                         """)
