@@ -1,6 +1,8 @@
 from discord.ext import commands
 from random import choices, randint
 import json
+from data.user import User
+from data import db_session
 
 
 class Alex(commands.Cog):
@@ -18,36 +20,30 @@ class Alex(commands.Cog):
             for i in [',', '.']:
                 msg_words = list(map(lambda x: x.replace(i, ''), msg_words))
             # delete unwanted chars like commas and dots
-            with open("dict.json", "r", encoding='utf8') as f:
-                words_dict = json.load(f)
-            # get already existing json dictionary file
-            if str(message.author.id) in words_dict.keys():
-                in_dict = [i[0] for i in words_dict[str(message.author.id)]]
-                # if message authors id is already among dictionary keys, we get a list of his words
-            else:
-                words_dict[str(message.author.id)] = []
-                in_dict = []
-                # if message authors id is not in dictionary, we create a new key
-                # in dictionary for him and consider his list of words empty
-            if words_dict == {"key": ["value1", "value2"]}:
-                words_dict = {str(message.author.id): []}
-                in_dict = []
-                # we can't load an empty json file, so, if bot has never read any
-                # messages yet, there will be a placeholder {"key": ["value1", "value2"]}
-                # in json file to avoid any errors
+            db_sess = db_session.create_session()
+            user = db_sess.query(User).filter(User.discord_id == message.author.id).first()
+            # get already existing database entry for current user
+            if user is None:
+                new_user = User(discord_id=message.author.id, words='', weights='', images='')
+                db_sess.add(new_user)
+                db_sess.commit()
+            user = db_sess.query(User).filter(User.discord_id == message.author.id).first()
             for word in msg_words:
-                if word not in in_dict:
-                    words_dict[str(message.author.id)].append([word, 1])
-                    in_dict.append(word)
+                if word not in user.words.split(';'):
+                    user.words += word + ';'
+                    user.weights = str(user.weights) + '1;'
                     # if current message author has used a new word, we add this word to
                     # his words list and to his dictionary with weight of 1
                 else:
-                    words_dict[str(message.author.id)][in_dict.index(word)][1] += 1
+                    ind = user.words.split(';').index(word)
+                    new_weights = str(user.weights).split(';')
+                    new_weights[ind] = str(int(new_weights[ind]) + 1)
+                    user.weights = ';'.join(new_weights)
                     # if we come across a word author has already used someday,
                     # we increase this words weight by one
-            with open("dict.json", "w", encoding='utf8') as f:
-                json.dump(words_dict, f, ensure_ascii=False)
-            # write an update json dictionary file
+            db_sess.commit()
+            db_sess.close()
+            # update current users entry in database
 
     @commands.command(name='sudo_Alexandr.aic')
     async def random_words(self, ctx):

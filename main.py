@@ -3,6 +3,7 @@ import discord
 from discord.ext import commands
 # import logging
 from decouple import config
+from data import db_session
 
 
 intents = discord.Intents.default()
@@ -18,4 +19,5 @@ async def main():
 
 
 if __name__ == '__main__':
+    db_session.global_init("dict.db")
     asyncio.run(main())
