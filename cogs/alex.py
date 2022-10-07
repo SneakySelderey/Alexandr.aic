@@ -47,24 +47,21 @@ class Alex(commands.Cog):
 
     @commands.command(name='sudo_Alexandr.aic')
     async def random_words(self, ctx):
-        with open("dict.json", "r", encoding='utf8') as f:
-            data = json.load(f)[str(ctx.message.author.id)]
-        # get a list of words from dictionary for message author
-        msg = list(choices([i[0] for i in data], weights=[i[1] for i in data], k=randint(5, 15)))
-        # choose from 5 to 15 words from authors list of words based on their weight - the greater the weight is, the higher the pobability to choose that word is
-        line = ''
-        for i in msg:
-            line += i + ' '
-        await ctx.send(f"""
-                        {line}
-                        """)
+        db_sess = db_session.create_session()
+        user = db_sess.query(User).filter(User.discord_id == ctx.message.author.id).first()
+        # get a list of words from database for message author
+        msg = list(choices([i for i in user.words.split(';')[:-1]], weights=map(int, [i for i in user.weights.split(';')[:-1]]), k=randint(5, 15)))
+        # choose from 5 to 15 words from authors list of words based on their weight -
+        # - the greater the weight is, the higher the pobability to choose that word is
+        msg = ' '.join(msg)
+        await ctx.send(msg)
         # compile an output message and send it
 
     @commands.command(name='help')
     async def help(self, ctx):
         await ctx.send("""```
 I return random words from users messages. That's it for now.
-$sudo Alexandr.aic```""")
+$sudo_Alexandr.aic```""")
     # help command
 
 

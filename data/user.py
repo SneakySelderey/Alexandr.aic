@@ -1,6 +1,6 @@
 import sqlalchemy
 # from sqlalchemy import orm
-import base64
+# import base64
 from .db_session import SqlAlchemyBase
 from sqlalchemy_serializer import SerializerMixin
 
