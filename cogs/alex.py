@@ -50,12 +50,15 @@ class Alex(commands.Cog):
         db_sess = db_session.create_session()
         user = db_sess.query(User).filter(User.discord_id == ctx.message.author.id).first()
         # get a list of words from database for message author
-        msg = list(choices([i for i in user.words.split(';')[:-1]], weights=map(int, [i for i in user.weights.split(';')[:-1]]), k=randint(5, 15)))
-        # choose from 5 to 15 words from authors list of words based on their weight -
-        # - the greater the weight is, the higher the pobability to choose that word is
-        msg = ' '.join(msg)
-        await ctx.send(msg)
-        # compile an output message and send it
+        if user is not None:
+            msg = list(choices([i for i in user.words.split(';')[:-1]], weights=map(int, [i for i in user.weights.split(';')[:-1]]), k=randint(5, 15)))
+            # choose from 5 to 15 words from authors list of words based on their weight -
+            # - the greater the weight is, the higher the pobability to choose that word is
+            msg = ' '.join(msg)
+            await ctx.send(msg)
+            # compile an output message and send it
+        else:
+            await ctx.send('Ваш словарь пуст')
 
     @commands.command(name='help')
     async def help(self, ctx):
