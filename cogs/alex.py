@@ -1,15 +1,6 @@
-import asyncio
-import discord
 from discord.ext import commands
-# import logging
-from decouple import config
 from random import choices, randint
 import json
-
-
-intents = discord.Intents.default()
-intents.members = True
-dashes = ['\u2680', '\u2681', '\u2682', '\u2683', '\u2684', '\u2685']
 
 
 class Alex(commands.Cog):
@@ -81,12 +72,5 @@ $sudo Alexandr.aic```""")
     # help command
 
 
-async def main():
-    bot = commands.Bot(command_prefix='$', intents=intents, activity=discord.Activity(type=discord.ActivityType.listening, name="SCP Foundation databases"))
-    TOKEN = config('DISCORD_TOKEN', default='not found')
+def setup(bot):
     bot.add_cog(Alex(bot))
-    await bot.start(TOKEN)
-
-
-if __name__ == '__main__':
-    asyncio.run(main())
