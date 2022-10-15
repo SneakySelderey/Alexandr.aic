@@ -1,3 +1,4 @@
+import asyncio
 from discord.ext import commands
 from random import choices, randint
 import json
@@ -59,16 +60,16 @@ class Alex(commands.Cog):
             await ctx.send(msg)
             # compile an output message and send it
         else:
-            await ctx.send('Your database entry is empty')
+            await ctx.reply('Your database entry is empty')
 
     @commands.command(name='delete_from_entry')
     async def delete_from_entry(self, ctx, users, words):
         '''deletes words from entries in database'''
         if len(users) == 0:
-            await ctx.send(f'{ctx.message.author.mention} no users specified')
+            await ctx.reply('No users specified')
             # send a message about error
         if len(words) == 0:
-            await ctx.send(f'{ctx.message.author.mention} no words specified')
+            await ctx.reply('No words specified')
             # send a message about error
         elif (len(users) == 1 and users[0] == ctx.message.author.id) or (ctx.message.author.guild_permissions.administrator is True):
             # if message author specified only themself in users or if message author is an admin
@@ -94,7 +95,7 @@ class Alex(commands.Cog):
                     # change users words and their weights in database
                     db_sess.commit()
                     # save changes
-            await ctx.send(f'{ctx.message.author.mention} database entries have been redacted successfully')
+            await ctx.reply('Database entries have been redacted successfully')
             db_sess.close()
 
     @commands.command(name='delete_entries')
@@ -112,11 +113,30 @@ class Alex(commands.Cog):
             # update (reset) the autoincrement row (id) so we don't skip numbers
             db_sess.commit()
             db_sess.close()
-            await ctx.send(f'{ctx.message.author.mention} database entries have been deleted successfully')
+            await ctx.reply('Database entries have been deleted successfully')
             # send a message about successful deletion
         elif len(users) == 0:
-            await ctx.send(f'{ctx.message.author.mention} no users specified')
+            await ctx.reply('No users specified')
             # send a message about error
+
+    @commands.command(name='clear_database')
+    async def delete_entries(self, ctx):
+        '''wipes out the database'''
+        if ctx.message.author.guild_permissions.administrator is True:
+            try:
+                await ctx.reply('Are you sure about that? Respond in 30 seconds. $Y/$N')
+                respond = await self.bot.wait_for("message", check=lambda x: x.author.id == ctx.author.id and (x.content.lower() == "$y" or x.content.lower() == "$n"), timeout=30.0)
+            except asyncio.TimeoutError:
+                await ctx.reply("Request timed out")
+            if respond.content.lower() == "$y":
+                db_sess = db_session.create_session()
+                db_sess.query(User).delete()
+                db_sess.execute('UPDATE sqlite_sequence SET seq = (SELECT MAX(id) FROM users) WHERE name="users"')
+                await ctx.reply(f"Database has been wiped out successfully")
+                db_sess.commit()
+                db_sess.close()
+            else:
+                await ctx.reply("Request cancelled")
 
 
 async def setup(bot):
