@@ -93,7 +93,9 @@ class Alex(commands.Cog):
     async def help(self, ctx):
         await ctx.send("""```
 I return random words from users messages. That's it for now.
-$Alexandr.aic```""")
+
+$Alexandr.aic - returns random words from your messages
+$delete_my_entry word1 word2 ... - deletes the words you specified after the command from your database entry. If words are not specified, deletes your entry completely.```""")
     # help command
 
 
