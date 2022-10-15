@@ -45,7 +45,7 @@ class Alex(commands.Cog):
             db_sess.close()
             # update current users entry in database
 
-    @commands.command(name='sudo_Alexandr.aic')
+    @commands.command(name='Alexandr.aic')
     async def random_words(self, ctx):
         db_sess = db_session.create_session()
         user = db_sess.query(User).filter(User.discord_id == ctx.message.author.id).first()
