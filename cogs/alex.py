@@ -65,7 +65,6 @@ class Alex(commands.Cog):
     @commands.command(name='delete_my_entry')
     async def delete_my_entry(self, ctx, *words):
         '''deletes users entry from database'''
-        print(words)
         db_sess = db_session.create_session()
         if len(words) == 0:
             db_sess.query(User).filter(User.discord_id == ctx.message.author.id).delete()
@@ -89,14 +88,31 @@ class Alex(commands.Cog):
         db_sess.commit()
         db_sess.close()
 
+    @commands.command(name='clear_database')
+    async def delete_entries(self, ctx, *users):
+        '''deletes entries from database'''
+        db_sess = db_session.create_session()
+        if (len(users) == 1 and int(users[0][2:-1]) == ctx.message.author.id) or (ctx.message.author.guild_permissions.administrator is True):
+            for user in users:
+                db_sess.query(User).filter(User.discord_id == ctx.message.author.id).delete()
+                # delete message authors entry from database
+            db_sess.execute('UPDATE sqlite_sequence SET seq = (SELECT MAX(id) FROM users) WHERE name="users"')
+            # update (reset) the autoincrement row (id) so we don't skip numbers
+            db_sess.commit()
+            db_sess.close()
+            await ctx.send(f'{ctx.message.author.mention} database entries has been deleted successfully')
+            # send a message about successful deletion
+        elif len(users) == 0:
+            await ctx.send(f'{ctx.message.author.mention} no users specified')
+
     @commands.command(name='help')
     async def help(self, ctx):
+        '''help command'''
         await ctx.send("""```
 I return random words from users messages. That's it for now.
 
 $Alexandr.aic - returns random words from your messages
 $delete_my_entry word1 word2 ... - deletes the words you specified after the command from your database entry. If words are not specified, deletes your entry completely.```""")
-    # help command
 
 
 async def setup(bot):
