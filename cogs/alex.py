@@ -118,6 +118,11 @@ class Alex(commands.Cog):
             await ctx.send(f'{ctx.message.author.mention} no users specified')
             # send a message about error
 
+    @commands.command(name='clear_database')
+    async def delete_entries(self, ctx):
+        '''wipes out the database'''
+        pass
+
 
 async def setup(bot):
     await bot.add_cog(Alex(bot))
