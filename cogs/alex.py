@@ -175,7 +175,9 @@ class Alex(commands.Cog):
         user = db_sess.query(User).filter(User.discord_id == int(user)).first()
         # get a list of words from database for message author
         if user is not None:
-            msg = list(choices(user.words.split(';')[:-1], weights=map(int, user.weights.split(';')[:-1]), k=randint(5, 15)))
+            a = user.words.split(';')[:-1]
+            b = list(map(int, user.weights.split(';')[:-1]))
+            msg = list(choices(a, weights=b, k=randint(5, 15)))
             # choose from 5 to 15 words from authors list of words based on their weight -
             # - the greater the weight is, the higher the pobability to choose that word is
             msg = ' '.join(msg)
