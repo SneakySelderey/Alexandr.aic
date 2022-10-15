@@ -13,6 +13,7 @@ class Alex(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
+        '''checks every message'''
         if '$' != message.content[0] and message.author != self.bot.user:
             msg = message.content
             msg_words = msg.split(' ')
@@ -33,7 +34,7 @@ class Alex(commands.Cog):
                     user.words += word + ';'
                     user.weights = str(user.weights) + '1;'
                     # if current message author has used a new word, we add this word to
-                    # his words list and to his dictionary with weight of 1
+                    # his words list and to his database entry with weight of 1
                 else:
                     ind = user.words.split(';').index(word)
                     new_weights = str(user.weights).split(';')
@@ -47,6 +48,7 @@ class Alex(commands.Cog):
 
     @commands.command(name='Alexandr.aic')
     async def random_words(self, ctx):
+        '''sends a message compiled from random words from users entry in database'''
         db_sess = db_session.create_session()
         user = db_sess.query(User).filter(User.discord_id == ctx.message.author.id).first()
         # get a list of words from database for message author
@@ -58,16 +60,20 @@ class Alex(commands.Cog):
             await ctx.send(msg)
             # compile an output message and send it
         else:
-            await ctx.send('Your dictionary is empty')
+            await ctx.send('Your database entry is empty')
 
     @commands.command(name='delete_my_entry')
     async def delete_my_entry(self, ctx):
+        '''deletes users entry from database'''
         db_sess = db_session.create_session()
         db_sess.query(User).filter(User.discord_id == ctx.message.author.id).delete()
+        # delete message authors entry from database
         db_sess.execute('UPDATE sqlite_sequence SET seq = (SELECT MAX(id) FROM users) WHERE name="users"')
+        # update (reset) the autoincrement row (id) so we don't skip numbers
         db_sess.commit()
         db_sess.close()
         await ctx.send(f'{ctx.message.author.mention} your database entry has been deleted succesfully')
+        # send a message about succesful deletion
 
     @commands.command(name='help')
     async def help(self, ctx):
