@@ -200,7 +200,7 @@ class Alex(commands.Cog):
         db_sess.close()
 
     @debug_random_messages.error
-    async def on_application_command_error(ctx: discord.ApplicationContext, error: discord.DiscordException):
+    async def on_application_command_error(ctx, error: discord.DiscordException):
         if isinstance(error, commands.NotOwner):
             await ctx.reply("Only the bot owner can use this command")
         else:
