@@ -88,7 +88,7 @@ class Alex(commands.Cog):
         db_sess.commit()
         db_sess.close()
 
-    @commands.command(name='clear_database')
+    @commands.command(name='delete_entries')
     async def delete_entries(self, ctx, *users):
         '''deletes entries from database'''
         db_sess = db_session.create_session()
