@@ -141,7 +141,7 @@ class Alex(commands.Cog):
             # send a message about error
 
     @commands.command(name='clear_database')
-    async def delete_entries(self, ctx):
+    async def clear_database(self, ctx):
         '''wipes out the database'''
         if ctx.message.author.guild_permissions.administrator is True:
             try:
