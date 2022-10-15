@@ -14,5 +14,5 @@ class User(SqlAlchemyBase, SerializerMixin):
     discord_id = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
     words = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     weights = sqlalchemy.Column(sqlalchemy.String, nullable=True)
-    images = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    files = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     # orm_boats = orm.relation("CapsToBoats", back_populates="captain")

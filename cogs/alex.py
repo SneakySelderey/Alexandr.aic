@@ -1,9 +1,10 @@
 import asyncio
 from discord.ext import commands
+from discord import File
 from random import choices, randint
-import json
 from data.user import User
 from data import db_session
+import os
 
 
 class Alex(commands.Cog):
@@ -14,36 +15,49 @@ class Alex(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         '''checks every message'''
-        if '$' != message.content[0] and message.author != self.bot.user:
-            msg = message.content
-            msg_words = msg.split(' ')
-            # get message content if message is not a command for bot and is not a bots output
-            for i in [',', '.']:
-                msg_words = list(map(lambda x: x.replace(i, ''), msg_words))
-            # delete unwanted chars like commas and dots
-            db_sess = db_session.create_session()
-            user = db_sess.query(User).filter(User.discord_id == message.author.id).first()
-            # get already existing database entry for current user
-            if user is None:
-                new_user = User(discord_id=message.author.id, words='', weights='', images='')
-                db_sess.add(new_user)
+        if (message.content != '' and '$' not in message.content and message.author != self.bot.user) or (message.content == '' and len(message.attachments) > 0):
+            if message.content != '':
+                msg = message.content
+                msg_words = msg.split(' ')
+                # get message content if message is not a command for bot and is not a bots output
+                for i in [',', '.']:
+                    msg_words = list(map(lambda x: x.replace(i, ''), msg_words))
+                # delete unwanted chars like commas and dots
+                db_sess = db_session.create_session()
+                user = db_sess.query(User).filter(User.discord_id == message.author.id).first()
+                # get already existing database entry for current user
+                if user is None:
+                    new_user = User(discord_id=message.author.id, words='', weights='', files='')
+                    db_sess.add(new_user)
+                    db_sess.commit()
+                user = db_sess.query(User).filter(User.discord_id == message.author.id).first()
+                for word in msg_words:
+                    if word not in user.words.split(';'):
+                        user.words += word + ';'
+                        user.weights = str(user.weights) + '1;'
+                        # if current message author has used a new word, we add this word to
+                        # his words list and to his database entry with weight of 1
+                    else:
+                        ind = user.words.split(';').index(word)
+                        new_weights = str(user.weights).split(';')
+                        new_weights[ind] = str(int(new_weights[ind]) + 1)
+                        user.weights = ';'.join(new_weights)
+                        # if we come across a word author has already used someday,
+                        # we increase this words weight by one
                 db_sess.commit()
-            user = db_sess.query(User).filter(User.discord_id == message.author.id).first()
-            for word in msg_words:
-                if word not in user.words.split(';'):
-                    user.words += word + ';'
-                    user.weights = str(user.weights) + '1;'
-                    # if current message author has used a new word, we add this word to
-                    # his words list and to his database entry with weight of 1
-                else:
-                    ind = user.words.split(';').index(word)
-                    new_weights = str(user.weights).split(';')
-                    new_weights[ind] = str(int(new_weights[ind]) + 1)
-                    user.weights = ';'.join(new_weights)
-                    # if we come across a word author has already used someday,
-                    # we increase this words weight by one
-            db_sess.commit()
-            db_sess.close()
+                db_sess.close()
+            if len(message.attachments) > 0:
+                db_sess = db_session.create_session()
+                user = db_sess.query(User).filter(User.discord_id == message.author.id).first()
+                if f'{message.author.id}' not in os.listdir('attachments'):
+                    os.makedirs(f'attachments/{message.author.id}')
+                for att in message.attachments:
+                    path = f"attachments/{message.author.id}/{att.url.split('/')[-1]}"
+                    await att.save(path)
+                    if path not in user.files.split(';'):
+                        user.files += path + ';'
+                db_sess.commit()
+                db_sess.close()
             # update current users entry in database
 
     @commands.command(name='Alexandr.aic')
@@ -57,10 +71,17 @@ class Alex(commands.Cog):
             # choose from 5 to 15 words from authors list of words based on their weight -
             # - the greater the weight is, the higher the pobability to choose that word is
             msg = ' '.join(msg)
-            await ctx.send(msg)
+            if randint(1, 10) > 7 and user.files != '':
+                f = list(choices(user.files.split(';'), k=1))
+                f = File(f[0])
+                await ctx.send(file=f, content=msg)
+            else:
+                await ctx.send(msg)
             # compile an output message and send it
         else:
             await ctx.reply('Your database entry is empty')
+        db_sess.commit()
+        db_sess.close()
 
     @commands.command(name='delete_from_entry')
     async def delete_from_entry(self, ctx, users, words):
