@@ -167,6 +167,30 @@ class Alex(commands.Cog):
         else:
             await ctx.reply('You need admin permissions to send such requests')
 
+    @commands.command(name='debug_$Alexandr.aic')
+    @commands.is_owner()
+    async def debug_random_messages(self, ctx, user):
+        '''DEBUG COMMAND | sends a message compiled from random words from specified users entry in database'''
+        db_sess = db_session.create_session()
+        user = db_sess.query(User).filter(User.discord_id == int(user)).first()
+        # get a list of words from database for message author
+        if user is not None:
+            msg = list(choices(user.words.split(';')[:-1], weights=map(int, user.weights.split(';')[:-1]), k=randint(5, 15)))
+            # choose from 5 to 15 words from authors list of words based on their weight -
+            # - the greater the weight is, the higher the pobability to choose that word is
+            msg = ' '.join(msg)
+            if randint(1, 10) > 7 and user.files != '':
+                f = list(choices(user.files.split(';'), k=1))
+                f = File(f[0])
+                await ctx.send(file=f, content=msg)
+            else:
+                await ctx.send(msg)
+            # compile an output message and send it
+        else:
+            await ctx.reply('Your database entry is empty')
+        db_sess.commit()
+        db_sess.close()
+
 
 async def setup(bot):
     await bot.add_cog(Alex(bot))
