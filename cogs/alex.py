@@ -1,6 +1,6 @@
 import asyncio
 from discord.ext import commands
-from discord import File
+import discord
 from random import choices, randint
 from data.user import User
 from data import db_session
@@ -73,7 +73,7 @@ class Alex(commands.Cog):
             msg = ' '.join(msg)
             if randint(1, 10) > 7 and user.files != '':
                 f = list(choices(user.files.split(';'), k=1))
-                f = File(f[0])
+                f = discord.File(f[0])
                 await ctx.send(file=f, content=msg)
             else:
                 await ctx.send(msg)
@@ -183,7 +183,7 @@ class Alex(commands.Cog):
             msg = ' '.join(msg)
             if randint(1, 10) > 7 and user.files != '':
                 f = list(choices(user.files.split(';'), k=1))
-                f = File(f[0])
+                f = discord.File(f[0])
                 await ctx.send(file=f, content=msg)
             else:
                 await ctx.send(msg)
@@ -192,6 +192,13 @@ class Alex(commands.Cog):
             await ctx.reply('Your database entry is empty')
         db_sess.commit()
         db_sess.close()
+
+    @debug_random_messages.error
+    async def on_application_command_error(ctx: discord.ApplicationContext, error: discord.DiscordException):
+        if isinstance(error, commands.NotOwner):
+            await ctx.reply("Only the bot owner can use this command")
+        else:
+            raise error  # Here we raise other errors to ensure they aren't ignored
 
 
 async def setup(bot):
