@@ -1,6 +1,6 @@
 import asyncio
 from discord.ext import commands
-from discord import File
+import discord
 from random import choices, randint
 from data.user import User
 from data import db_session
@@ -67,13 +67,13 @@ class Alex(commands.Cog):
         user = db_sess.query(User).filter(User.discord_id == ctx.message.author.id).first()
         # get a list of words from database for message author
         if user is not None:
-            msg = list(choices([i for i in user.words.split(';')[:-1]], weights=map(int, [i for i in user.weights.split(';')[:-1]]), k=randint(5, 15)))
+            msg = list(choices(user.words.split(';')[:-1], weights=map(int, user.weights.split(';')[:-1]), k=randint(5, 15)))
             # choose from 5 to 15 words from authors list of words based on their weight -
             # - the greater the weight is, the higher the pobability to choose that word is
             msg = ' '.join(msg)
             if randint(1, 10) > 7 and user.files != '':
                 f = list(choices(user.files.split(';'), k=1))
-                f = File(f[0])
+                f = discord.File(f[0])
                 await ctx.send(file=f, content=msg)
             else:
                 await ctx.send(msg)
@@ -92,7 +92,7 @@ class Alex(commands.Cog):
         if len(words) == 0:
             await ctx.reply('No words specified')
             # send a message about error
-        elif (len(users) == 1 and users[0] == ctx.message.author.id) or (ctx.message.author.guild_permissions.administrator is True):
+        elif (len(users) == 1 and users[0] == ctx.message.author.id and len(words) > 0) or (ctx.message.author.guild_permissions.administrator is True and len(words) > 0):
             # if message author specified only themself in users or if message author is an admin
             db_sess = db_session.create_session()
             users = list(map(lambda x: int(x[2:-1]), users.split(' ')))
@@ -118,6 +118,10 @@ class Alex(commands.Cog):
                     # save changes
             await ctx.reply('Database entries have been redacted successfully')
             db_sess.close()
+        elif len(words) == 0:
+            await ctx.reply('Incorrect arguments')
+        else:
+            await ctx.reply('You need admin permissions to send such requests')
 
     @commands.command(name='delete_entries')
     async def delete_entries(self, ctx, *users):
@@ -139,16 +143,21 @@ class Alex(commands.Cog):
         elif len(users) == 0:
             await ctx.reply('No users specified')
             # send a message about error
+        else:
+            await ctx.reply('You need admin permissions to send such requests')
 
     @commands.command(name='clear_database')
-    async def delete_entries(self, ctx):
+    async def clear_database(self, ctx):
         '''wipes out the database'''
         if ctx.message.author.guild_permissions.administrator is True:
+            # if message author is an admin
             try:
                 await ctx.reply('Are you sure about that? Respond in 30 seconds. $Y/$N')
                 respond = await self.bot.wait_for("message", check=lambda x: x.author.id == ctx.author.id and (x.content.lower() == "$y" or x.content.lower() == "$n"), timeout=30.0)
+                # wait for respond from author for 30 seconds
             except asyncio.TimeoutError:
                 await ctx.reply("Request timed out")
+                # if we don't get a respond in 30 seconds
             if respond.content.lower() == "$y":
                 db_sess = db_session.create_session()
                 db_sess.query(User).delete()
@@ -156,8 +165,46 @@ class Alex(commands.Cog):
                 await ctx.reply(f"Database has been wiped out successfully")
                 db_sess.commit()
                 db_sess.close()
+                # if respond was a "y", then wipe out the database
             else:
                 await ctx.reply("Request cancelled")
+                # if respond wasn't a "y", then do nothing
+        else:
+            await ctx.reply('You need admin permissions to send such requests')
+            # if author have no admin rules
+
+    @commands.command(name='debug_$Alexandr.aic')
+    @commands.is_owner()
+    async def debug_random_messages(self, ctx, user):
+        '''DEBUG COMMAND | sends a message compiled from random words from specified users entry in database'''
+        db_sess = db_session.create_session()
+        user = db_sess.query(User).filter(User.discord_id == int(user)).first()
+        # get a list of words from database for message author
+        if user is not None:
+            a = user.words.split(';')[:-1]
+            b = list(map(int, user.weights.split(';')[:-1]))
+            msg = list(choices(a, weights=b, k=randint(5, 15)))
+            # choose from 5 to 15 words from authors list of words based on their weight -
+            # - the greater the weight is, the higher the pobability to choose that word is
+            msg = ' '.join(msg)
+            if randint(1, 10) > 7 and user.files != '':
+                f = list(choices(user.files.split(';'), k=1))
+                f = discord.File(f[0])
+                await ctx.send(file=f, content=msg)
+            else:
+                await ctx.send(msg)
+            # compile an output message and send it
+        else:
+            await ctx.reply('Your database entry is empty')
+        db_sess.commit()
+        db_sess.close()
+
+    @debug_random_messages.error
+    async def on_application_command_error(ctx: discord.ApplicationContext, error: discord.DiscordException):
+        if isinstance(error, commands.NotOwner):
+            await ctx.reply("Only the bot owner can use this command")
+        else:
+            raise error  # Here we raise other errors to ensure they aren't ignored
 
 
 async def setup(bot):
