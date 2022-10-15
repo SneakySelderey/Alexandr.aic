@@ -4,6 +4,7 @@ from random import choices, randint
 import json
 from data.user import User
 from data import db_session
+import urllib.request
 
 
 class Alex(commands.Cog):
@@ -14,7 +15,7 @@ class Alex(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         '''checks every message'''
-        if '$' != message.content[0] and message.author != self.bot.user:
+        if ('$' != message.content[0] and message.author != self.bot.user) or (len(message.content) == 0 and len(message.attachments) > 0):
             msg = message.content
             msg_words = msg.split(' ')
             # get message content if message is not a command for bot and is not a bots output
@@ -25,7 +26,7 @@ class Alex(commands.Cog):
             user = db_sess.query(User).filter(User.discord_id == message.author.id).first()
             # get already existing database entry for current user
             if user is None:
-                new_user = User(discord_id=message.author.id, words='', weights='', images='')
+                new_user = User(discord_id=message.author.id, words='', weights='', files='')
                 db_sess.add(new_user)
                 db_sess.commit()
             user = db_sess.query(User).filter(User.discord_id == message.author.id).first()
@@ -42,6 +43,10 @@ class Alex(commands.Cog):
                     user.weights = ';'.join(new_weights)
                     # if we come across a word author has already used someday,
                     # we increase this words weight by one
+            for link in message.attachments:
+                path = f"attachments/{link.split('/')[-1]}"
+                urllib.request.urlretrieve(link, path)
+                user.files += path + ';'
             db_sess.commit()
             db_sess.close()
             # update current users entry in database
