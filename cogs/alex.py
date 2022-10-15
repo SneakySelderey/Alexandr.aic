@@ -1,6 +1,5 @@
 import asyncio
 from discord.ext import commands
-from discord import Message
 from random import choices, randint
 import json
 from data.user import User
