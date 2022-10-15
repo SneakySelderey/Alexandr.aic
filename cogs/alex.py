@@ -58,7 +58,15 @@ class Alex(commands.Cog):
             await ctx.send(msg)
             # compile an output message and send it
         else:
-            await ctx.send('Ваш словарь пуст')
+            await ctx.send('Your dictionary is empty')
+
+    @commands.command(name='delete_my_entry')
+    async def delete_my_entry(self, ctx):
+        db_sess = db_session.create_session()
+        db_sess.query(User).filter(User.discord_id == ctx.message.author.id).delete()
+        db_sess.commit()
+        db_sess.close()
+        await ctx.send(f'{ctx.message.author.mention} your database entry has been deleted succesfully')
 
     @commands.command(name='help')
     async def help(self, ctx):
