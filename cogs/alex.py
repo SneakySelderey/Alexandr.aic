@@ -1,7 +1,7 @@
 import asyncio
 from discord.ext import commands
+from discord import File
 from random import choices, randint
-import json
 from data.user import User
 from data import db_session
 import os
@@ -15,7 +15,7 @@ class Alex(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         '''checks every message'''
-        if (message.content != '' and message.author != self.bot.user) or (message.content == '' and len(message.attachments) > 0):
+        if (message.content != '' and '$' not in message.content and message.author != self.bot.user) or (message.content == '' and len(message.attachments) > 0):
             if message.content != '':
                 msg = message.content
                 msg_words = msg.split(' ')
@@ -71,10 +71,17 @@ class Alex(commands.Cog):
             # choose from 5 to 15 words from authors list of words based on their weight -
             # - the greater the weight is, the higher the pobability to choose that word is
             msg = ' '.join(msg)
-            await ctx.send(msg)
+            if randint(1, 10) > 7 and user.files != '':
+                f = list(choices(user.files.split(';'), k=1))
+                f = File(f[0])
+                await ctx.send(file=f, content=msg)
+            else:
+                await ctx.send(msg)
             # compile an output message and send it
         else:
             await ctx.reply('Your database entry is empty')
+        db_sess.commit()
+        db_sess.close()
 
     @commands.command(name='delete_from_entry')
     async def delete_from_entry(self, ctx, users, words):
