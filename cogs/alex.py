@@ -72,21 +72,29 @@ class Alex(commands.Cog):
             await ctx.send(f'{ctx.message.author.mention} no words specified')
             # send a message about error
         elif (len(users) == 1 and users[0] == ctx.message.author.id) or (ctx.message.author.guild_permissions.administrator is True):
+            # if message author specified only themself in users or if message author is an admin
             db_sess = db_session.create_session()
             users = list(map(lambda x: int(x[2:-1]), users.split(' ')))
+            # get clear integers as users ids
             words = words.split(' ')
             for user in users:
                 entry = db_sess.query(User).filter(User.discord_id == user).first()
+                # find user in database by discord id
                 if entry is not None:
+                    # if user in database
                     words_list = entry.words.split(';')
                     weights_list = entry.weights.split(';')
+                    # get users words and their weights in format of list
                     for word in words:
                         index = words_list.index(word)
                         del words_list[index]
                         del weights_list[index]
+                        # delete specified words and their weights from lists
                     entry.weights = ';'.join(weights_list)
                     entry.words = ';'.join(words_list)
+                    # change users words and their weights in database
                     db_sess.commit()
+                    # save changes
             await ctx.send(f'{ctx.message.author.mention} database entries have been redacted successfully')
             db_sess.close()
 
@@ -97,9 +105,10 @@ class Alex(commands.Cog):
         users = list(map(lambda x: int(x[2:-1]), users))
         # get clear integers as users ids
         if (len(users) == 1 and users[0] == ctx.message.author.id) or (ctx.message.author.guild_permissions.administrator is True):
+            # if message author specified only themself in users or if message author is an admin
             for user in users:
-                db_sess.query(User).filter(User.discord_id == ctx.message.author.id).delete()
-                # delete message authors entry from database
+                db_sess.query(User).filter(User.discord_id == user).delete()
+                # delete users entries from database
             db_sess.execute('UPDATE sqlite_sequence SET seq = (SELECT MAX(id) FROM users) WHERE name="users"')
             # update (reset) the autoincrement row (id) so we don't skip numbers
             db_sess.commit()
