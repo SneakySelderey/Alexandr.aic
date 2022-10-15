@@ -1,0 +1,15 @@
+aiohttp==3.8.3
+aiosignal==1.2.0
+async-timeout==4.0.2
+attrs==22.1.0
+charset-normalizer==2.1.1
+discord.py==2.0.1
+frozenlist==1.3.1
+greenlet==1.1.3.post0
+idna==3.4
+multidict==6.0.2
+pycodestyle==2.9.1
+python-decouple==3.6
+SQLAlchemy==1.4.41
+SQLAlchemy-serializer==1.4.1
+yarl==1.8.1
