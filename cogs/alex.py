@@ -64,9 +64,9 @@ class Alex(commands.Cog):
     async def help(self, ctx):
         await ctx.send("""```
 I return random words from users messages. That's it for now.
-$sudo_Alexandr.aic```""")
+$Alexandr.aic```""")
     # help command
 
 
-def setup(bot):
-    bot.add_cog(Alex(bot))
+async def setup(bot):
+    await bot.add_cog(Alex(bot))
