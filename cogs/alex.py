@@ -124,11 +124,11 @@ class Alex(commands.Cog):
         '''wipes out the database'''
         if ctx.message.author.guild_permissions.administrator is True:
             try:
-                await ctx.reply('Are you sure about that? Respond in 30 seconds. Y/N')
-                respond = await self.bot.wait_for("message", check=lambda x: x.author.id == ctx.author.id and (x.content.lower() == "y" or x.content.lower() == "n"), timeout=5.0)
+                await ctx.reply('Are you sure about that? Respond in 30 seconds. $Y/$N')
+                respond = await self.bot.wait_for("message", check=lambda x: x.author.id == ctx.author.id and (x.content.lower() == "$y" or x.content.lower() == "$n"), timeout=30.0)
             except asyncio.TimeoutError:
                 await ctx.reply("Request timed out")
-            if respond.content.lower() == "y":
+            if respond.content.lower() == "$y":
                 db_sess = db_session.create_session()
                 db_sess.query(User).delete()
                 db_sess.execute('UPDATE sqlite_sequence SET seq = (SELECT MAX(id) FROM users) WHERE name="users"')
