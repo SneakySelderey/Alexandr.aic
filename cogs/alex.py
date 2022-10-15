@@ -63,17 +63,31 @@ class Alex(commands.Cog):
             await ctx.send('Your database entry is empty')
 
     @commands.command(name='delete_my_entry')
-    async def delete_my_entry(self, ctx):
+    async def delete_my_entry(self, ctx, *words):
         '''deletes users entry from database'''
+        print(words)
         db_sess = db_session.create_session()
-        db_sess.query(User).filter(User.discord_id == ctx.message.author.id).delete()
-        # delete message authors entry from database
-        db_sess.execute('UPDATE sqlite_sequence SET seq = (SELECT MAX(id) FROM users) WHERE name="users"')
-        # update (reset) the autoincrement row (id) so we don't skip numbers
+        if len(words) == 0:
+            db_sess.query(User).filter(User.discord_id == ctx.message.author.id).delete()
+            # delete message authors entry from database
+            db_sess.execute('UPDATE sqlite_sequence SET seq = (SELECT MAX(id) FROM users) WHERE name="users"')
+            # update (reset) the autoincrement row (id) so we don't skip numbers
+            await ctx.send(f'{ctx.message.author.mention} your database entry has been deleted successfully')
+            # send a message about successful deletion
+        else:
+            user = db_sess.query(User).filter(User.discord_id == ctx.message.author.id).first()
+            words_list = user.words.split(';')
+            weights_list = user.weights.split(';')
+            print(words_list, weights_list)
+            for word in words:
+                index = words_list.index(word)
+                del words_list[index]
+                del weights_list[index]
+            user.weights = ';'.join(weights_list)
+            user.words = ';'.join(words_list)
+            await ctx.send(f'{ctx.message.author.mention} your database entry has been redacted successfully')
         db_sess.commit()
         db_sess.close()
-        await ctx.send(f'{ctx.message.author.mention} your database entry has been deleted succesfully')
-        # send a message about succesful deletion
 
     @commands.command(name='help')
     async def help(self, ctx):
