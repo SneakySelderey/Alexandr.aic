@@ -92,7 +92,7 @@ class Alex(commands.Cog):
         if len(words) == 0:
             await ctx.reply('No words specified')
             # send a message about error
-        elif (len(users) == 1 and users[0] == ctx.message.author.id) or (ctx.message.author.guild_permissions.administrator is True):
+        elif (len(users) == 1 and users[0] == ctx.message.author.id and len(words) > 0) or (ctx.message.author.guild_permissions.administrator is True and len(words) > 0):
             # if message author specified only themself in users or if message author is an admin
             db_sess = db_session.create_session()
             users = list(map(lambda x: int(x[2:-1]), users.split(' ')))
@@ -118,6 +118,10 @@ class Alex(commands.Cog):
                     # save changes
             await ctx.reply('Database entries have been redacted successfully')
             db_sess.close()
+        elif len(words) == 0:
+            await ctx.reply('Incorrect arguments')
+        else:
+            await ctx.reply('You need admin permissions to send such requests')
 
     @commands.command(name='delete_entries')
     async def delete_entries(self, ctx, *users):
@@ -139,6 +143,8 @@ class Alex(commands.Cog):
         elif len(users) == 0:
             await ctx.reply('No users specified')
             # send a message about error
+        else:
+            await ctx.reply('You need admin permissions to send such requests')
 
     @commands.command(name='clear_database')
     async def clear_database(self, ctx):
@@ -158,6 +164,8 @@ class Alex(commands.Cog):
                 db_sess.close()
             else:
                 await ctx.reply("Request cancelled")
+        else:
+            await ctx.reply('You need admin permissions to send such requests')
 
 
 async def setup(bot):
