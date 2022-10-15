@@ -9,7 +9,6 @@ class Alex(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.bot.remove_command('help')
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -118,15 +117,6 @@ class Alex(commands.Cog):
         elif len(users) == 0:
             await ctx.send(f'{ctx.message.author.mention} no users specified')
             # send a message about error
-
-    @commands.command(name='help')
-    async def help(self, ctx):
-        '''help command'''
-        await ctx.send("""```
-I return random words from users messages. That's it for now.
-
-$Alexandr.aic - returns random words from your messages
-$delete_my_entry word1 word2 ... - deletes the words you specified after the command from your database entry. If words are not specified, deletes your entry completely.```""")
 
 
 async def setup(bot):
