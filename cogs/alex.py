@@ -64,6 +64,7 @@ class Alex(commands.Cog):
     async def delete_my_entry(self, ctx):
         db_sess = db_session.create_session()
         db_sess.query(User).filter(User.discord_id == ctx.message.author.id).delete()
+        db_sess.execute('UPDATE sqlite_sequence SET seq = (SELECT MAX(id) FROM users) WHERE name="users"')
         db_sess.commit()
         db_sess.close()
         await ctx.send(f'{ctx.message.author.mention} your database entry has been deleted succesfully')
