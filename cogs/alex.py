@@ -67,11 +67,11 @@ class Alex(commands.Cog):
         user = db_sess.query(User).filter(User.discord_id == ctx.message.author.id).first()
         # get a list of words from database for message author
         if user is not None:
-            msg = list(choices(user.words.split(';')[:-1], weights=map(int, user.weights.split(';')[:-1]), k=randint(5, 15)))
+            msg = list(choices(user.words.split(';')[:-1], weights=map(int, user.weights.split(';')[:-1]), k=randint(50, 100)))
             # choose from 5 to 15 words from authors list of words based on their weight -
             # - the greater the weight is, the higher the pobability to choose that word is
             msg = ' '.join(msg)
-            if randint(1, 10) > 7 and user.files != '':
+            if randint(1, 10) > 9 and user.files != '':
                 f = list(choices(user.files.split(';'), k=1))
                 f = discord.File(f[0])
                 await ctx.send(file=f, content=msg)
@@ -183,6 +183,7 @@ class Alex(commands.Cog):
         if user is not None:
             a = user.words.split(';')[:-1]
             b = list(map(int, user.weights.split(';')[:-1]))
+            print(len(a), len(b))
             msg = list(choices(a, weights=b, k=randint(5, 15)))
             # choose from 5 to 15 words from authors list of words based on their weight -
             # - the greater the weight is, the higher the pobability to choose that word is
