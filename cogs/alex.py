@@ -32,18 +32,20 @@ class Alex(commands.Cog):
                     db_sess.commit()
                 user = db_sess.query(User).filter(User.discord_id == message.author.id).first()
                 for word in msg_words:
-                    if word not in user.words.split(';'):
-                        user.words += word + ';'
-                        user.weights = str(user.weights) + '1;'
-                        # if current message author has used a new word, we add this word to
-                        # his words list and to his database entry with weight of 1
-                    else:
-                        ind = user.words.split(';').index(word)
-                        new_weights = str(user.weights).split(';')
-                        new_weights[ind] = str(int(new_weights[ind]) + 1)
-                        user.weights = ';'.join(new_weights)
-                        # if we come across a word author has already used someday,
-                        # we increase this words weight by one
+                    if (word[:2] != '<@' or word[-1] != '>') and ('https://' not in word and 'http://' not in word):
+                        # skip user pings an links
+                        if word not in user.words.split(';'):
+                            user.words += word + ';'
+                            user.weights = str(user.weights) + '1;'
+                            # if current message author has used a new word, we add this word to
+                            # his words list and to his database entry with weight of 1
+                        else:
+                            ind = user.words.split(';').index(word)
+                            new_weights = str(user.weights).split(';')
+                            new_weights[ind] = str(int(new_weights[ind]) + 1)
+                            user.weights = ';'.join(new_weights)
+                            # if we come across a word author has already used someday,
+                            # we increase this words weight by one
                 db_sess.commit()
                 db_sess.close()
             if len(message.attachments) > 0:
@@ -67,11 +69,11 @@ class Alex(commands.Cog):
         user = db_sess.query(User).filter(User.discord_id == ctx.message.author.id).first()
         # get a list of words from database for message author
         if user is not None:
-            msg = list(choices(user.words.split(';')[:-1], weights=map(int, user.weights.split(';')[:-1]), k=randint(5, 15)))
+            msg = list(choices(user.words.split(';')[:-1], weights=map(int, user.weights.split(';')[:-1]), k=randint(50, 100)))
             # choose from 5 to 15 words from authors list of words based on their weight -
             # - the greater the weight is, the higher the pobability to choose that word is
             msg = ' '.join(msg)
-            if randint(1, 10) > 7 and user.files != '':
+            if randint(1, 10) > 9 and user.files != '':
                 f = list(choices(user.files.split(';'), k=1))
                 f = discord.File(f[0])
                 await ctx.send(file=f, content=msg)
@@ -183,6 +185,7 @@ class Alex(commands.Cog):
         if user is not None:
             a = user.words.split(';')[:-1]
             b = list(map(int, user.weights.split(';')[:-1]))
+            print(len(a), len(b))
             msg = list(choices(a, weights=b, k=randint(5, 15)))
             # choose from 5 to 15 words from authors list of words based on their weight -
             # - the greater the weight is, the higher the pobability to choose that word is
@@ -197,6 +200,36 @@ class Alex(commands.Cog):
         else:
             await ctx.reply('Your database entry is empty')
         db_sess.commit()
+        db_sess.close()
+
+    @commands.command(name='delete_redundant_stuff')
+    @commands.is_owner()
+    async def delete_redundant_stuff(self, ctx):
+        '''DEBUG COMMAND | deletes redundant words (links, user pings and so on) from database'''
+        db_sess = db_session.create_session()
+        entries = list(db_sess.query(User).all())
+        # all users in database
+        for entry in entries:
+            words_list = entry.words.split(';')
+            weights_list = entry.weights.split(';')
+            # get users words and their weights in format of list
+            ind = []
+            for word in words_list:
+                if (word.startswith('<@') and word.endswith('>')) or ('@here' in word or '@everyone' in word) or (word.startswith('https://') or word.startswith('http://')):
+                    ind.append(words_list.index(word))
+                    # find indexes of user pings and links
+            print(ind)
+            print(words_list[23].startswith('<@'), words_list[23].endswith('>'))
+            for i in ind:
+                del words_list[i]
+                del weights_list[i]
+                # delete pings, links and their weights
+            entry.weights = ';'.join(weights_list)
+            entry.words = ';'.join(words_list)
+            # change users words and their weights in database
+            db_sess.commit()
+            # save changes
+        await ctx.reply('Database entries have been redacted successfully')
         db_sess.close()
 
     @debug_random_messages.error
