@@ -202,6 +202,36 @@ class Alex(commands.Cog):
         db_sess.commit()
         db_sess.close()
 
+    @commands.command(name='delete_redundant_stuff')
+    @commands.is_owner()
+    async def delete_redundant_stuff(self, ctx):
+        '''DEBUG COMMAND | deletes redundant words (links, user pings and so on) from database'''
+        db_sess = db_session.create_session()
+        entries = list(db_sess.query(User).all())
+        # all users in database
+        for entry in entries:
+            words_list = entry.words.split(';')
+            weights_list = entry.weights.split(';')
+            # get users words and their weights in format of list
+            ind = []
+            for word in words_list:
+                if (word.startswith('<@') and word.endswith('>')) or ('@here' in word or '@everyone' in word) or (word.startswith('https://') or word.startswith('http://')):
+                    ind.append(words_list.index(word))
+                    # find indexes of user pings and links
+            print(ind)
+            print(words_list[23].startswith('<@'), words_list[23].endswith('>'))
+            for i in ind:
+                del words_list[i]
+                del weights_list[i]
+                # delete pings, links and their weights
+            entry.weights = ';'.join(weights_list)
+            entry.words = ';'.join(words_list)
+            # change users words and their weights in database
+            db_sess.commit()
+            # save changes
+        await ctx.reply('Database entries have been redacted successfully')
+        db_sess.close()
+
     @debug_random_messages.error
     async def on_application_command_error(ctx, error: discord.DiscordException):
         if isinstance(error, commands.NotOwner):
