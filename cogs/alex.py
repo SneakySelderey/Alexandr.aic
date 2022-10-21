@@ -32,18 +32,20 @@ class Alex(commands.Cog):
                     db_sess.commit()
                 user = db_sess.query(User).filter(User.discord_id == message.author.id).first()
                 for word in msg_words:
-                    if word not in user.words.split(';'):
-                        user.words += word + ';'
-                        user.weights = str(user.weights) + '1;'
-                        # if current message author has used a new word, we add this word to
-                        # his words list and to his database entry with weight of 1
-                    else:
-                        ind = user.words.split(';').index(word)
-                        new_weights = str(user.weights).split(';')
-                        new_weights[ind] = str(int(new_weights[ind]) + 1)
-                        user.weights = ';'.join(new_weights)
-                        # if we come across a word author has already used someday,
-                        # we increase this words weight by one
+                    if (word[:2] != '<@' or word[-1] != '>') and ('https://' not in word and 'http://' not in word):
+                        # skip user pings an links
+                        if word not in user.words.split(';'):
+                            user.words += word + ';'
+                            user.weights = str(user.weights) + '1;'
+                            # if current message author has used a new word, we add this word to
+                            # his words list and to his database entry with weight of 1
+                        else:
+                            ind = user.words.split(';').index(word)
+                            new_weights = str(user.weights).split(';')
+                            new_weights[ind] = str(int(new_weights[ind]) + 1)
+                            user.weights = ';'.join(new_weights)
+                            # if we come across a word author has already used someday,
+                            # we increase this words weight by one
                 db_sess.commit()
                 db_sess.close()
             if len(message.attachments) > 0:
