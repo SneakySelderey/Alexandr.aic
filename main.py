@@ -11,7 +11,7 @@ intents = discord.Intents.default()
 intents.members = True
 intents.message_content = True
 dashes = ['\u2680', '\u2681', '\u2682', '\u2683', '\u2684', '\u2685']
-
+discord.utils.setup_logging(level=logging.INFO, root=False)
 bot = commands.Bot(command_prefix='$', intents=intents, activity=discord.Activity(type=discord.ActivityType.listening, name="SCP Foundation databases"), log_level=logging.DEBUG)
 bot.help_command = SupremeHelpCommand()
 TOKEN = config('DISCORD_TOKEN', default='not found')
