@@ -108,8 +108,8 @@ class Alex(commands.Cog):
                     words_list = entry.words.split(';')
                     weights_list = entry.weights.split(';')
                     # get users words and their weights in format of list
-                    for word in words:
-                        index = words_list.index(word)
+                    for i in range(len(words) - 1, -1, -1):
+                        index = words_list.index(words[i])
                         del words_list[index]
                         del weights_list[index]
                         # delete specified words and their weights from lists
@@ -219,7 +219,6 @@ class Alex(commands.Cog):
                     to_delete.append(word)
                     # find user pings and links
             print(to_delete)
-            print()
             for i in range(len(to_delete) - 1, -1, -1):
                 ind = words_list.index(to_delete[i])
                 del words_list[ind]
