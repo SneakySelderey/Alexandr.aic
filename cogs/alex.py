@@ -219,8 +219,9 @@ class Alex(commands.Cog):
                     to_delete.append(word)
                     # find user pings and links
             print(to_delete)
-            for i in range(len(to_delete), 0, -1):
-                ind = words_list.index(word)
+            print()
+            for i in range(len(to_delete) - 1, -1, -1):
+                ind = words_list.index(to_delete[i])
                 del words_list[ind]
                 del weights_list[ind]
                 # delete pings, links and their weights
