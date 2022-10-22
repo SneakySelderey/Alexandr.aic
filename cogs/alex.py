@@ -213,16 +213,16 @@ class Alex(commands.Cog):
             words_list = entry.words.split(';')
             weights_list = entry.weights.split(';')
             # get users words and their weights in format of list
-            ind = []
+            to_delete = []
             for word in words_list:
                 if (word.startswith('<@') and word.endswith('>')) or ('@here' in word or '@everyone' in word) or (word.startswith('https://') or word.startswith('http://')):
-                    ind.append(words_list.index(word))
-                    # find indexes of user pings and links
-            print(ind)
-            print(words_list[23].startswith('<@'), words_list[23].endswith('>'))
-            for i in ind:
-                del words_list[i]
-                del weights_list[i]
+                    to_delete.append(word)
+                    # find user pings and links
+            print(to_delete)
+            for i in range(len(to_delete), 0, -1):
+                ind = words_list.index(word)
+                del words_list[ind]
+                del weights_list[ind]
                 # delete pings, links and their weights
             entry.weights = ';'.join(weights_list)
             entry.words = ';'.join(words_list)
